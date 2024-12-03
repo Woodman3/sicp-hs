@@ -6,9 +6,9 @@ cabal-version: 2.2
 
 name:           sicp-hs
 version:        0.1.0.0
-description:    Please see the README on GitHub at <https://github.com/githubuser/sicp-hs#readme>
-homepage:       https://github.com/githubuser/sicp-hs#readme
-bug-reports:    https://github.com/githubuser/sicp-hs/issues
+description:    Please see the README on GitHub at <https://github.com/Woodman3/sicp-hs#readme>
+homepage:       https://github.com/Woodman3/sicp-hs#readme
+bug-reports:    https://github.com/Woodman3/sicp-hs/issues
 author:         Author name here
 maintainer:     example@example.com
 copyright:      2024 Author name here
@@ -21,11 +21,13 @@ extra-source-files:
 
 source-repository head
   type: git
-  location: https://github.com/githubuser/sicp-hs
+  location: https://github.com/Woodman3/sicp-hs
 
 library
   exposed-modules:
       Lexer
+      Parser
+      Token
   other-modules:
       Paths_sicp_hs
   autogen-modules:
