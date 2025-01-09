@@ -1,28 +1,58 @@
-module Token(Token(..),
-    Op(..),
-    is_op) where
+module Token(
+    ) where
 
 import Parser
+import Control.Applicative
+import Data.Char
 
-data Token = Int Int | Op Op | LPar | RPar
-    deriving (Show,Eq)
+data Atom = Int Int | Bool Bool | String String deriving (Show,Eq)
 
-data Op = Mul | Sub | Add | Div
-    deriving (Eq)
+data Op = Mul | Div | Add | Sub deriving (Eq)
 
 instance Show Op where
     show Mul = "*"
-    show Sub = "-"
-    show Add = "+"
     show Div = "/"
+    show Add = "+"
+    show Sub = "-"
 
-is_op :: Token -> Bool
-is_op (Op _) = True
-is_op _ = False
+data SExp = Node Op [SExp] | Leaf Atom deriving (Show,Eq)
 
--- digit :: Parser Int
--- digit = read <$> some (satisfy isDigit)
+atom :: Parser Char Atom
+atom = foldr1 ( <|>) [
+    Int <$> int,
+    Bool <$> bool,
+    String <$> exp_string
+    ]
+     
 
--- op :: Parser Op
--- op = read <$> satisfy $ \c-> c == '*' || c == '/' || c == '+' || c == '-'
+bool :: Parser Char Bool
+bool = True <$ string "true" <|> False <$ string "false"
+
+int ::  Parser Char  Int
+int = read <$> some (satisfy isDigit)
+
+exp_string :: Parser Char String
+exp_string = char '"' *> many (satisfy (/= '"')) <* char '"'
+
+node :: Parser Char SExp
+node = do
+    char '('
+    spaces
+    op <- exp_op
+    exps <- many (spaces *> s_exp) 
+    spaces
+    char ')'
+    return $ Node op exps
+
+s_exp :: Parser Char SExp
+s_exp = node <|> Leaf <$> atom
+
+exp_op :: Parser Char Op
+exp_op = to_op <$> ( satisfy $ \c-> c == '*' || c == '/' || c == '+' || c == '-' )
+    where to_op '*' = Mul
+          to_op '/' = Div
+          to_op '+' = Add
+          to_op '-' = Sub
+          to_op _ = error "unexpected operator"
+
 

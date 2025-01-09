@@ -2,69 +2,74 @@ module Parser where
 
 import Control.Applicative
 import Data.List (nub)
+import Data.Char
 
 type Offset = Int
 
-data Error i e = Error {
+data Error i  = Error {
     error_pos :: Offset,
-    error_type :: ErrorType i e
+    error_type :: ErrorType i 
 } deriving (Show,Eq)
 
-data ErrorType i e 
+data ErrorType i  
     = UnexpectedEndOfInput
     | Expect i i
     | ExpectEOF i
     | Unexpected i
-    | CustomError e
     | Empty
     deriving (Show,Eq)
 
-data Parser i e a = Parser{ parse :: [i]->Offset->Either [ Error i e ] (a,Offset,[i]) } 
+data Parser i a = Parser{ parse :: [i]->Offset->Either [ Error i ] (a,Offset,[i]) } 
 
-error_token ::(i->ErrorType i e) -> (i->Bool)->Parser i e i
+error_token ::(i->ErrorType i) -> (i->Bool)->Parser i i
 error_token mk_err f = Parser $ \input offset -> case input of
     (x:xs)-> if f x then Right (x,offset+1,xs) else Left [Error offset ( mk_err x )] 
     []-> Left [Error offset UnexpectedEndOfInput]
 
-satisfy :: (i->Bool)->Parser i e i 
+satisfy :: (i->Bool)->Parser i i 
 satisfy f = error_token (\x -> Unexpected x) f
 
-eof :: Parser i e ()
+eof :: Parser i ()
 eof = Parser $ \input offset -> case input of
     []-> Right ((),offset,[])
     (x:xs)-> Left [Error offset ( ExpectEOF x )]
 
-char :: Eq i => i ->Parser i e i 
+spaces :: Parser Char ()
+spaces = () <$ many (satisfy isSpace)
+
+char :: Eq i => i ->Parser i i 
 char c = error_token (\x -> Expect c x) (==c)
 
-string :: Eq i => [i] -> Parser i e [i] 
+string :: Eq i => [i] -> Parser i [i] 
 string [] = return []
 string (x:xs) = do
     rx <- char x
     rxs <- string xs
     return (rx:rxs)
 
-instance Functor ( Parser i e )  where
+run :: Parser i a -> [i] -> Either [Error i] a
+run p input = case parse p input 0 of
+    Right (a,_,_)-> Right a
+    Left e -> Left e
+
+instance Functor ( Parser i )  where
     fmap f pa = Parser $ \input offset  -> do
         (x,offset',xs) <- parse pa input offset
         return (f x,offset',xs) 
-    -- fmap f pa = Parser $ \a-> case parse pa a of 
-    --     Just(x,xs)-> Just(f x,xs)
-    --     Nothing -> Nothing
 
-instance Applicative (Parser i e) where
+instance Applicative (Parser i) where
     pure x = Parser $ \input offset-> Right (x,offset,input) 
     pf <*> pa = Parser $ \input offset -> do
         (f,offset',input') <- parse pf input offset
         (a,offset'',input'') <- parse pa input' offset'
         return (f a,offset'',input'')
 
-instance Monad (Parser i e) where
+instance Monad (Parser i) where
     pa >>= f = Parser $ \input offset -> do
         (a,offset',rest) <- parse pa input offset
         parse (f a) rest offset'
 
-instance ( Eq i , Eq e ) => Alternative (Parser i e) where
+instance ( Eq i ) => Alternative (Parser i ) where
     empty = Parser $ \_ offset -> Left [Error offset Empty] 
     pa <|> pb = Parser $ \input offset-> case parse pa input offset of
         Right r  -> Right r
