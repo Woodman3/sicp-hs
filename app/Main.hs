@@ -4,7 +4,7 @@ import Token
 import Eval
 import Parser(run)
 
-import System.IO( openFile, hGetContents, hClose, IOMode(ReadMode) )
+import System.IO( openFile, hGetContents, IOMode(ReadMode) )
 
 main :: IO ()
 main = do

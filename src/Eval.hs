@@ -24,10 +24,17 @@ primitiveProcedure (Op "<") args = Bool $  and $ zipWith (<) (map toInt args) (t
 primitiveProcedure (Op ">") args = Bool $ and $ zipWith (>) (map toInt args) (tail $ map toInt args)
 primitiveProcedure (Op "=") args  = Bool $ and $ zipWith (==) (map toInt args) (tail $ map toInt args)
 primitiveProcedure (Op "<=") args = Bool $  and $ zipWith (<=) (map toInt args) (tail $ map toInt args) -- in scheme, (<) return #t (< 1) return #t
-primitiveProcedure (Op ">=") args = Bool $ and $ zipWith (>) (map toInt args) (tail $ map toInt args)
+primitiveProcedure (Op ">=") args = Bool $ and $ zipWith (>=) (map toInt args) (tail $ map toInt args)
+primitiveProcedure (Op "and") args = Bool $ and $ map toBool args
+primitiveProcedure (Op "or") args = Bool $ or $ map toBool args
+primitiveProcedure (Op "not") [Bool b] = Bool $ not b
 primitiveProcedure _ _ = error "unknown operator"
 
 
 toInt :: Atom -> Int
 toInt (Int i) = i
 toInt _ = error "not an integer"
+
+toBool :: Atom -> Bool
+toBool (Bool b) = b
+toBool _ = error "not a boolean"

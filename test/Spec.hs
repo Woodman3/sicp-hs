@@ -30,6 +30,34 @@ main = hspec $ do
             evalExpr "(+ (* 2 3) (- 5 2))" `shouldBe` Right "Int 9"
             evalExpr "(/ (* 10 5) (+ 1 1))" `shouldBe` Right "Int 25"
             evalExpr "(- (+ 10 20) (* 2 5))" `shouldBe` Right "Int 20"
+        
+        it "handles comparison operators" $ do
+            evalExpr "(< 1 2)" `shouldBe` Right "Bool True"
+            evalExpr "(< 2 1)" `shouldBe` Right "Bool False"
+            evalExpr "(> 1 2)" `shouldBe` Right "Bool False"
+            evalExpr "(> 2 1)" `shouldBe` Right "Bool True"
+            evalExpr "(= 1 1)" `shouldBe` Right "Bool True"
+            evalExpr "(= 1 2)" `shouldBe` Right "Bool False"
+            evalExpr "(<= 1 2)" `shouldBe` Right "Bool True"
+            evalExpr "(<= 2 2)" `shouldBe` Right "Bool True"
+            evalExpr "(<= 2 1)" `shouldBe` Right "Bool False"
+            evalExpr "(>= 1 2)" `shouldBe` Right "Bool False"
+            evalExpr "(>= 2 2)" `shouldBe` Right "Bool True"
+            evalExpr "(>= 2 1)" `shouldBe` Right "Bool True"
+        
+        it "handles logical operators" $ do
+            evalExpr "(and #t #t)" `shouldBe` Right "Bool True"
+            evalExpr "(and #t #f)" `shouldBe` Right "Bool False"
+            evalExpr "(and #f #t)" `shouldBe` Right "Bool False"
+            evalExpr "(and #f #f)" `shouldBe` Right "Bool False"
+            evalExpr "(or #t #t)" `shouldBe` Right "Bool True"
+            evalExpr "(or #t #f)" `shouldBe` Right "Bool True"
+            evalExpr "(or #f #t)" `shouldBe` Right "Bool True"
+            evalExpr "(or #f #f)" `shouldBe` Right "Bool False"
+            evalExpr "(not #t)" `shouldBe` Right "Bool False"
+            evalExpr "(not #f)" `shouldBe` Right "Bool True"
+
+
 
         -- it "handles invalid expressions" $ do
         --     eval_expr "(+ 1)" `shouldThrow` anyException  -- 缺少参数
