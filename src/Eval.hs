@@ -3,7 +3,6 @@ module Eval(
 )where
 
 import Token
-import Debug.Trace
 
 eval :: SExp -> Atom
 eval ( Leaf a ) = a
@@ -21,7 +20,7 @@ primitive_procedure Add args = Int $ foldr (+) 0 $ map (to_int) args -- (+) retu
 primitive_procedure Sub args = Int $ foldr1 (-) $ map (to_int) args -- (-) return will error in lisp
 primitive_procedure Mul args = Int $ foldr (*) 1 $ map (to_int) args -- (*) return just 1 in lisp
 primitive_procedure Div args = Int $ foldr1 div $ map (to_int) args -- (/) return will error in lisp
-    where 
-        to_int (Int i) = i
-        to_int _ = error "not an integer"
 
+to_int :: Atom -> Int
+to_int (Int i) = i
+to_int _ = error "not an integer"
