@@ -1,10 +1,10 @@
-module Interpreter(eval_expr) where
+module Interpreter(evalExpr) where
 
-import Token(s_exp) 
+import Token(sExp) 
 import Parser(parse,Error(..))
 import Eval
 
-eval_expr :: String -> Either [ Error Char ] String 
-eval_expr s = case parse s_exp s 0 of
+evalExpr :: String -> Either [ Error Char ] String 
+evalExpr s = case parse sExp s 0 of
     Left err -> Left err
     Right (ast,_,_) -> Right $ show $ eval ast 

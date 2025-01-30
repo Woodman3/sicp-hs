@@ -6,21 +6,21 @@ import Token
 
 eval :: SExp -> Atom
 eval ( Leaf a ) = a
-eval ( Node o s ) = apply o (list_of_values s)
+eval ( Node o s ) = apply o (listOfValues s)
 
 apply :: Op -> [Atom] -> Atom
-apply op args = primitive_procedure op args
+apply op args = primitiveProcedure op args
 
-list_of_values :: [SExp] -> [Atom]
-list_of_values [] = []
-list_of_values (x:xs) = eval x : list_of_values xs
+listOfValues :: [SExp] -> [Atom]
+listOfValues [] = []
+listOfValues (x:xs) = eval x : listOfValues xs
 
-primitive_procedure :: Op -> [Atom] -> Atom
-primitive_procedure Add args = Int $ foldr (+) 0 $ map (to_int) args -- (+) return just 0 in lisp
-primitive_procedure Sub args = Int $ foldr1 (-) $ map (to_int) args -- (-) return will error in lisp
-primitive_procedure Mul args = Int $ foldr (*) 1 $ map (to_int) args -- (*) return just 1 in lisp
-primitive_procedure Div args = Int $ foldr1 div $ map (to_int) args -- (/) return will error in lisp
+primitiveProcedure :: Op -> [Atom] -> Atom
+primitiveProcedure Add args = Int $ foldr (+) 0 $ map (toInt) args -- (+) return just 0 in lisp
+primitiveProcedure Sub args = Int $ foldr1 (-) $ map (toInt) args -- (-) return will error in lisp
+primitiveProcedure Mul args = Int $ foldr (*) 1 $ map (toInt) args -- (*) return just 1 in lisp
+primitiveProcedure Div args = Int $ foldr1 div $ map (toInt) args -- (/) return will error in lisp
 
-to_int :: Atom -> Int
-to_int (Int i) = i
-to_int _ = error "not an integer"
+toInt :: Atom -> Int
+toInt (Int i) = i
+toInt _ = error "not an integer"

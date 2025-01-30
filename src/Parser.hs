@@ -21,13 +21,13 @@ data ErrorType i
 
 data Parser i a = Parser{ parse :: [i]->Offset->Either [ Error i ] (a,Offset,[i]) } 
 
-error_token ::(i->ErrorType i) -> (i->Bool)->Parser i i
-error_token mk_err f = Parser $ \input offset -> case input of
+errorToken ::(i->ErrorType i) -> (i->Bool)->Parser i i
+errorToken mk_err f = Parser $ \input offset -> case input of
     (x:xs)-> if f x then Right (x,offset+1,xs) else Left [Error offset ( mk_err x )] 
     []-> Left [Error offset UnexpectedEndOfInput]
 
 satisfy :: (i->Bool)->Parser i i 
-satisfy f = error_token (\x -> Unexpected x) f
+satisfy f = errorToken (\x -> Unexpected x) f
 
 eof :: Parser i ()
 eof = Parser $ \input offset -> case input of
@@ -38,7 +38,7 @@ spaces :: Parser Char ()
 spaces = () <$ many (satisfy isSpace)
 
 char :: Eq i => i ->Parser i i 
-char c = error_token (\x -> Expect c x) (==c)
+char c = errorToken (\x -> Expect c x) (==c)
 
 string :: Eq i => [i] -> Parser i [i] 
 string [] = return []

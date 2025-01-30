@@ -2,7 +2,7 @@ module Token(
     Atom(..),
     Op(..),
     SExp(..),
-    s_exp
+    sExp
 ) where
 
 import Parser
@@ -11,7 +11,7 @@ import Data.Char
 
 data Atom = Int Int | Bool Bool | String String deriving (Show,Eq)
 
-data Op = Mul | Div | Add | Sub deriving (Eq)
+data Op = Mul | Div | Add | Sub  deriving (Eq)
 
 instance Show Op where
     show Mul = "*"
@@ -25,34 +25,34 @@ atom :: Parser Char Atom
 atom = foldr1 ( <|>) [
     Int <$> int,
     Bool <$> bool,
-    String <$> exp_string
+    String <$> expString
     ]
      
 
 bool :: Parser Char Bool
-bool = True <$ string "true" <|> False <$ string "false"
+bool = True <$ string "#t" <|> False <$ string "#f"
 
 int ::  Parser Char  Int
 int = read <$> some (satisfy isDigit)
 
-exp_string :: Parser Char String
-exp_string = char '"' *> many (satisfy (/= '"')) <* char '"'
+expString :: Parser Char String
+expString = char '"' *> many (satisfy (/= '"')) <* char '"'
 
 node :: Parser Char SExp
 node = do
     char '('
     spaces
-    op <- exp_op
-    exps <- many (spaces *> s_exp) 
+    op <- expOp
+    exps <- many (spaces *> sExp) 
     spaces
     char ')'
     return $ Node op exps
 
-s_exp :: Parser Char SExp
-s_exp = node <|> Leaf <$> atom
+sExp :: Parser Char SExp
+sExp = node <|> Leaf <$> atom
 
-exp_op :: Parser Char Op
-exp_op = to_op <$> ( satisfy $ \c-> c == '*' || c == '/' || c == '+' || c == '-' )
+expOp :: Parser Char Op
+expOp = to_op <$> ( satisfy $ \c-> c == '*' || c == '/' || c == '+' || c == '-' )
     where to_op '*' = Mul
           to_op '/' = Div
           to_op '+' = Add
