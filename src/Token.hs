@@ -11,13 +11,7 @@ import Data.Char
 
 data Atom = Int Int | Bool Bool | String String deriving (Show,Eq)
 
-data Op = Mul | Div | Add | Sub  deriving (Eq)
-
-instance Show Op where
-    show Mul = "*"
-    show Div = "/"
-    show Add = "+"
-    show Sub = "-"
+newtype Op = Op String deriving (Show,Eq)
 
 data SExp = Node Op [SExp] | Leaf Atom deriving (Show,Eq)
 
@@ -27,7 +21,7 @@ atom = foldr1 ( <|>) [
     Bool <$> bool,
     String <$> expString
     ]
-     
+
 
 bool :: Parser Char Bool
 bool = True <$ string "#t" <|> False <$ string "#f"
@@ -43,7 +37,7 @@ node = do
     char '('
     spaces
     op <- expOp
-    exps <- many (spaces *> sExp) 
+    exps <- many (spaces *> sExp)
     spaces
     char ')'
     return $ Node op exps
@@ -52,11 +46,9 @@ sExp :: Parser Char SExp
 sExp = node <|> Leaf <$> atom
 
 expOp :: Parser Char Op
-expOp = to_op <$> ( satisfy $ \c-> c == '*' || c == '/' || c == '+' || c == '-' )
-    where to_op '*' = Mul
-          to_op '/' = Div
-          to_op '+' = Add
-          to_op '-' = Sub
-          to_op _ = error "unexpected operator"
+expOp = Op <$> matchString ["+", "-", "*", "/", 
+    "<",">","=","<=",">="]
 
+matchString :: [String] -> Parser Char String
+matchString = foldr1 (<|>) . map string
 
