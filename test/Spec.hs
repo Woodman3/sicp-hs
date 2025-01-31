@@ -57,7 +57,15 @@ main = hspec $ do
             evalExpr "(not #t)" `shouldBe` Right "Bool False"
             evalExpr "(not #f)" `shouldBe` Right "Bool True"
 
-
+        it "handles if expressions" $ do
+            evalExpr "(if #t 1 2)" `shouldBe` Right "Int 1"
+            evalExpr "(if #f 1 2)" `shouldBe` Right "Int 2"
+            evalExpr "(if (< 1 2) 1 2)" `shouldBe` Right "Int 1"
+            evalExpr "(if (> 1 2) 1 2)" `shouldBe` Right "Int 2"
+            evalExpr "(if (= 1 1) 1 2)" `shouldBe` Right "Int 1"
+            evalExpr "(if (= 1 2) 1 2)" `shouldBe` Right "Int 2"
+            evalExpr "(if (<= 1 2) 1 2)" `shouldBe` Right "Int 1"
+            evalExpr "(if (>= 1 2) 1 2)" `shouldBe` Right "Int 2"
 
         -- it "handles invalid expressions" $ do
         --     eval_expr "(+ 1)" `shouldThrow` anyException  -- 缺少参数

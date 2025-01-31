@@ -6,7 +6,11 @@ import Token
 
 eval :: SExp -> Atom
 eval ( Leaf a ) = a
-eval ( Node o s ) = apply o (listOfValues s)
+eval ( Node o s ) = case o of
+    Op "if" -> if (toBool $ eval $ head s)
+        then eval $ s !! 1 
+        else eval $ s !! 2
+    _ ->  apply o (listOfValues s)
 
 apply :: Op -> [Atom] -> Atom
 apply op args = primitiveProcedure op args
