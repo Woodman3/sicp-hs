@@ -1,37 +1,38 @@
 module Eval(
-    eval    
+    eval
 )where
 
 import Token
 
 eval :: SExp -> Atom
 eval ( Leaf a ) = a
-eval ( Node o s ) = case o of
-    Op "if" -> if (toBool $ eval $ head s)
-        then eval $ s !! 1 
-        else eval $ s !! 2
-    _ ->  apply o (listOfValues s)
+eval ( Node (x:xs) ) = case eval x of
+    Op "if" -> if toBool $ eval $ head xs
+        then eval $ xs !! 1
+        else eval $ xs !! 2
+    Op o ->  apply o (listOfValues xs)
 
-apply :: Op -> [Atom] -> Atom
+
+apply :: String -> [Atom] -> Atom
 apply op args = primitiveProcedure op args
 
 listOfValues :: [SExp] -> [Atom]
 listOfValues [] = []
 listOfValues (x:xs) = eval x : listOfValues xs
 
-primitiveProcedure :: Op -> [Atom] -> Atom
-primitiveProcedure ( Op "+" ) args = Int $ foldr (+) 0 $ map (toInt) args -- (+) return just 0 in lisp
-primitiveProcedure ( Op "-" ) args = Int $ foldr1 (-) $ map (toInt) args -- (-) return will error in lisp
-primitiveProcedure (Op "*") args = Int $ foldr (*) 1 $ map (toInt) args -- (*) return just 1 in lisp
-primitiveProcedure (Op "/") args = Int $ foldr1 div $ map (toInt) args -- (/) return will error in lisp
-primitiveProcedure (Op "<") args = Bool $  and $ zipWith (<) (map toInt args) (tail $ map toInt args) -- in scheme, (<) return #t (< 1) return #t
-primitiveProcedure (Op ">") args = Bool $ and $ zipWith (>) (map toInt args) (tail $ map toInt args)
-primitiveProcedure (Op "=") args  = Bool $ and $ zipWith (==) (map toInt args) (tail $ map toInt args)
-primitiveProcedure (Op "<=") args = Bool $  and $ zipWith (<=) (map toInt args) (tail $ map toInt args) -- in scheme, (<) return #t (< 1) return #t
-primitiveProcedure (Op ">=") args = Bool $ and $ zipWith (>=) (map toInt args) (tail $ map toInt args)
-primitiveProcedure (Op "and") args = Bool $ and $ map toBool args
-primitiveProcedure (Op "or") args = Bool $ or $ map toBool args
-primitiveProcedure (Op "not") [Bool b] = Bool $ not b
+primitiveProcedure :: String -> [Atom] -> Atom
+primitiveProcedure "+" args = Int $ foldr (+) 0 $ map (toInt) args -- (+) return just 0 in lisp
+primitiveProcedure "-" args = Int $ foldr1 (-) $ map (toInt) args -- (-) return will error in lisp
+primitiveProcedure "*" args = Int $ foldr (*) 1 $ map (toInt) args -- (*) return just 1 in lisp
+primitiveProcedure "/" args = Int $ foldr1 div $ map (toInt) args -- (/) return will error in lisp
+primitiveProcedure "<" args = Bool $  and $ zipWith (<) (map toInt args) (tail $ map toInt args) -- in scheme, (<) return #t (< 1) return #t
+primitiveProcedure ">" args = Bool $ and $ zipWith (>) (map toInt args) (tail $ map toInt args)
+primitiveProcedure "=" args  = Bool $ and $ zipWith (==) (map toInt args) (tail $ map toInt args)
+primitiveProcedure "<=" args = Bool $  and $ zipWith (<=) (map toInt args) (tail $ map toInt args) -- in scheme, (<) return #t (< 1) return #t
+primitiveProcedure ">=" args = Bool $ and $ zipWith (>=) (map toInt args) (tail $ map toInt args)
+primitiveProcedure "and" args = Bool $ and $ map toBool args
+primitiveProcedure "or" args = Bool $ or $ map toBool args
+primitiveProcedure "not" [Bool b] = Bool $ not b
 primitiveProcedure _ _ = error "unknown operator"
 
 

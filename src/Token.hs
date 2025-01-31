@@ -1,6 +1,5 @@
 module Token(
     Atom(..),
-    Op(..),
     SExp(..),
     sExp
 ) where
@@ -9,17 +8,19 @@ import Parser
 import Control.Applicative
 import Data.Char
 
-data Atom = Int Int | Bool Bool | String String deriving (Show,Eq)
+data Atom = Int Int 
+    | Bool Bool 
+    | String String
+    | Op String deriving (Show,Eq)
 
-newtype Op = Op String deriving (Show,Eq)
-
-data SExp = Node Op [SExp] | Leaf Atom deriving (Show,Eq)
+data SExp = Node [SExp] | Leaf Atom deriving (Show,Eq)
 
 atom :: Parser Atom
 atom = foldr1 ( <|>) [
     Int <$> int,
     Bool <$> bool,
-    String <$> expString
+    String <$> expString,
+    expOp
     ]
 
 
@@ -35,20 +36,17 @@ expString = char '"' *> many (satisfy (/= '"')) <* char '"'
 node :: Parser SExp
 node = do
     _ <- char '('
-    spaces
-    op <- expOp
-    exps <- many (spaces *> sExp)
-    spaces
+    exps <- many (spaces *> sExp <* spaces)
     _ <- char ')'
-    return $ Node op exps
+    return $ Node exps
 
 sExp :: Parser SExp
 sExp = node <|> Leaf <$> atom
 
-expOp :: Parser Op
+expOp :: Parser Atom
 expOp = Op <$> matchString ["+", "-", "*", "/", 
     "<=",">=","<",">","=","and","or","not",
-    "if"]
+    "if","cond"]
 
 matchString :: [String] -> Parser String
 matchString = foldr1 (<|>) . map string
