@@ -10,15 +10,26 @@ eval ( Node (x:xs) ) = case eval x of
     Op "if" -> if toBool $ eval $ head xs
         then eval $ xs !! 1
         else eval $ xs !! 2
+    Op "cond" -> evalCond xs
     Op o ->  apply o (listOfValues xs)
+    _ -> error "invalid expression"
+eval _ = error "invalid expression"
 
+
+evalCond :: [SExp] -> Atom
+evalCond [] = error "no true clause in cond"
+evalCond (x:xs)= case x of
+    Node [Leaf (Op "else"),y] -> eval y
+    Node [c,y] -> if toBool $ eval c
+        then eval y
+        else evalCond xs
+    _ -> error "invalid cond clause"
 
 apply :: String -> [Atom] -> Atom
-apply op args = primitiveProcedure op args
+apply = primitiveProcedure
 
 listOfValues :: [SExp] -> [Atom]
-listOfValues [] = []
-listOfValues (x:xs) = eval x : listOfValues xs
+listOfValues = map eval
 
 primitiveProcedure :: String -> [Atom] -> Atom
 primitiveProcedure "+" args = Int $ foldr (+) 0 $ map (toInt) args -- (+) return just 0 in lisp

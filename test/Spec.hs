@@ -66,6 +66,16 @@ main = hspec $ do
             evalExpr "(if (= 1 2) 1 2)" `shouldBe` Right "Int 2"
             evalExpr "(if (<= 1 2) 1 2)" `shouldBe` Right "Int 1"
             evalExpr "(if (>= 1 2) 1 2)" `shouldBe` Right "Int 2"
+        
+        it "handles cond expressions" $ do
+            evalExpr "(cond (#t 1) (#f 2))" `shouldBe` Right "Int 1"
+            evalExpr "(cond (#f 1) (#t 2))" `shouldBe` Right "Int 2"
+            evalExpr "(cond ((< 1 2) 1) ((> 1 2) 2))" `shouldBe` Right "Int 1"
+            evalExpr "(cond ((> 1 2) 1) ((< 1 2) 2))" `shouldBe` Right "Int 2"
+            evalExpr "(cond ((= 1 1) 1) ((= 1 2) 2))" `shouldBe` Right "Int 1"
+            evalExpr "(cond ((= 1 2) 1) ((= 1 1) 2))" `shouldBe` Right "Int 2"
+            evalExpr "(cond ((<= 1 2) 1) ((>= 1 2) 2))" `shouldBe` Right "Int 1"
+            evalExpr "(cond ((>= 1 2) 1) ((<= 1 2) 2))" `shouldBe` Right "Int 2"
 
         -- it "handles invalid expressions" $ do
         --     eval_expr "(+ 1)" `shouldThrow` anyException  -- 缺少参数
