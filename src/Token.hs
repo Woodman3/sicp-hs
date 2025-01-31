@@ -15,7 +15,7 @@ newtype Op = Op String deriving (Show,Eq)
 
 data SExp = Node Op [SExp] | Leaf Atom deriving (Show,Eq)
 
-atom :: Parser Char Atom
+atom :: Parser Atom
 atom = foldr1 ( <|>) [
     Int <$> int,
     Bool <$> bool,
@@ -23,33 +23,33 @@ atom = foldr1 ( <|>) [
     ]
 
 
-bool :: Parser Char Bool
+bool :: Parser Bool
 bool = True <$ string "#t" <|> False <$ string "#f"
 
-int ::  Parser Char  Int
+int ::  Parser  Int
 int = read <$> some (satisfy isDigit)
 
-expString :: Parser Char String
+expString :: Parser String
 expString = char '"' *> many (satisfy (/= '"')) <* char '"'
 
-node :: Parser Char SExp
+node :: Parser SExp
 node = do
-    char '('
+    _ <- char '('
     spaces
     op <- expOp
     exps <- many (spaces *> sExp)
     spaces
-    char ')'
+    _ <- char ')'
     return $ Node op exps
 
-sExp :: Parser Char SExp
+sExp :: Parser SExp
 sExp = node <|> Leaf <$> atom
 
-expOp :: Parser Char Op
+expOp :: Parser Op
 expOp = Op <$> matchString ["+", "-", "*", "/", 
     "<=",">=","<",">","=","and","or","not",
     "if"]
 
-matchString :: [String] -> Parser Char String
+matchString :: [String] -> Parser String
 matchString = foldr1 (<|>) . map string
 
