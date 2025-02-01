@@ -46,7 +46,8 @@ sExp = node <|> Leaf <$> atom
 expOp :: Parser Atom
 expOp = Op <$> matchString ["+", "-", "*", "/", 
     "<=",">=","<",">","=","and","or","not",
-    "if","cond","else"]
+    "if","cond","else",
+    "define"]
 
 matchString :: [String] -> Parser String
 matchString = foldr1 (<|>) . map string

@@ -4,6 +4,8 @@ module Eval(
 
 import Token
 
+newtype Env = State [(String,Atom)] deriving Show
+
 eval :: SExp -> Atom
 eval ( Leaf a ) = a
 eval ( Node (x:xs) ) = case eval x of

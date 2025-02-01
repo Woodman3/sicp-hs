@@ -1,6 +1,6 @@
 module Parser(
     Parser(..),
-    Error(..),
+    ParseError(..),
     run,
     satisfy,
     eof,
@@ -15,7 +15,7 @@ import Data.Char
 
 type Offset = Int
 
-data Error i  = Error {
+data ParseError i  = ParseError {
     error_pos :: Offset,
     error_type :: ErrorType i
 } deriving (Show,Eq)
@@ -28,12 +28,12 @@ data ErrorType i
     | Empty
     deriving (Show,Eq)
 
-newtype Parser a = Parser{ parse :: [Char]->Offset->Either [ Error Char ] (a,Offset,[Char]) }
+newtype Parser a = Parser{ parse :: [Char]->Offset->Either [ ParseError Char ] (a,Offset,[Char]) }
 
 errorToken ::(Char->ErrorType Char) -> (Char->Bool)->Parser Char
 errorToken mk_err f = Parser $ \input offset -> case input of
-    (x:xs)-> if f x then Right (x,offset+1,xs) else Left [Error offset ( mk_err x )]
-    []-> Left [Error offset UnexpectedEndOfInput]
+    (x:xs)-> if f x then Right (x,offset+1,xs) else Left [ParseError offset ( mk_err x )]
+    []-> Left [ParseError offset UnexpectedEndOfInput]
 
 satisfy :: (Char->Bool)->Parser Char
 satisfy = errorToken Unexpected
@@ -41,7 +41,7 @@ satisfy = errorToken Unexpected
 eof :: Parser ()
 eof = Parser $ \input offset -> case input of
     []-> Right ((),offset,[])
-    (x:xs)-> Left [Error offset ( ExpectEOF x )]
+    (x:xs)-> Left [ParseError offset ( ExpectEOF x )]
 
 spaces :: Parser ()
 spaces = () <$ many (satisfy isSpace)
@@ -56,7 +56,7 @@ string (x:xs) = do
     rxs <- string xs
     return (rx:rxs)
 
-run :: Parser a -> [Char] -> Either [Error Char] a
+run :: Parser a -> [Char] -> Either [ParseError Char] a
 run p input = case parse p input 0 of
     Right (a,_,_)-> Right a
     Left e -> Left e
@@ -79,7 +79,7 @@ instance Monad Parser where
         parse (f a) rest offset'
 
 instance  Alternative Parser  where
-    empty = Parser $ \_ offset -> Left [Error offset Empty]
+    empty = Parser $ \_ offset -> Left [ParseError offset Empty]
     pa <|> pb = Parser $ \input offset-> case parse pa input offset of
         Right r  -> Right r
         Left e -> case parse pb input offset of
