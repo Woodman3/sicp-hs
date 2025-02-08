@@ -1,4 +1,5 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE LambdaCase #-}
 module Eval(
     eval,
     Env(..),
@@ -8,7 +9,6 @@ module Eval(
 import Token
 
 import Data.Map(Map)
-import Control.Monad
 import Control.Monad.Except
 import Control.Monad.State
 
@@ -26,19 +26,14 @@ newtype Intrp a = Intrp { intrp :: ExceptT IError (State Env) a }
 
 eval :: SExp -> Intrp Atom
 eval ( Leaf a ) = return a
-eval ( Node (x:xs) ) = do
-    x <- eval x
-    case x of
-        Op "if" -> do
-            cond <- eval $ head xs
-            if toBool cond
-                then eval $ xs !! 1
-                else eval $ xs !! 2
-        Op "cond" -> evalCond xs
-        Op o -> do
-            args <- listOfValues xs
-            apply o args
-        _ -> throwError $ EvalError "invalid expression"
+eval ( Node (x:xs) ) =eval x >>= \case
+    Op "if" -> evalIf xs
+    Op "cond" -> evalCond xs
+    Op "begin" -> last <$> mapM eval xs
+    Op o -> do
+        args <- listOfValues xs
+        apply o args
+    _ -> throwError $ EvalError "invalid expression"
 eval _ = throwError $ EvalError "invalid expression"
 
 
@@ -52,6 +47,14 @@ evalCond (x:xs)= case x of
             then eval y
             else evalCond xs
     _ -> throwError $ CondError "invalid clause"
+
+evalIf :: [SExp] -> Intrp Atom
+evalIf [c,t,e] = do
+    cond <- eval c
+    if toBool cond
+        then eval t
+        else eval e
+evalIf _ = throwError $ EvalError "invalid if expression"
 
 apply :: String -> [Atom] -> Intrp Atom
 apply o args = return $ primitiveProcedure o args

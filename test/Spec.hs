@@ -77,6 +77,11 @@ main = hspec $ do
             evalExpr "(cond ((<= 1 2) 1) ((>= 1 2) 2))" `shouldBe` Right "Int 1"
             evalExpr "(cond ((>= 1 2) 1) ((<= 1 2) 2))" `shouldBe` Right "Int 2"
 
+        it "handles begin expressions" $ do
+            evalExpr "(begin 1 2 3)" `shouldBe` Right "Int 3"
+            evalExpr "(begin (+ 1 2) (- 5 2) (* 2 4))" `shouldBe` Right "Int 8"
+            evalExpr "(begin (begin 1 2) 3)" `shouldBe` Right "Int 3"
+
         -- it "handles invalid expressions" $ do
         --     eval_expr "(+ 1)" `shouldThrow` anyException  -- 缺少参数
         --     eval_expr "(1 2 3)" `shouldThrow` anyException  -- 无效的表达式

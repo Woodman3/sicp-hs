@@ -11,7 +11,8 @@ import Data.Char
 data Atom = Int Int 
     | Bool Bool 
     | String String
-    | Op String deriving (Show,Eq)
+    | Op String
+    | Var String deriving (Show,Eq)
 
 data SExp = Node [SExp] | Leaf Atom deriving (Show,Eq)
 
@@ -20,7 +21,8 @@ atom = foldr1 ( <|>) [
     Int <$> int,
     Bool <$> bool,
     String <$> expString,
-    expOp
+    expOp,
+    expVar
     ]
 
 
@@ -47,7 +49,11 @@ expOp :: Parser Atom
 expOp = Op <$> matchString ["+", "-", "*", "/", 
     "<=",">=","<",">","=","and","or","not",
     "if","cond","else",
+    "begin",
     "define"]
+
+expVar :: Parser Atom
+expVar = Var <$> some (satisfy isAlpha)
 
 matchString :: [String] -> Parser String
 matchString = foldr1 (<|>) . map string
