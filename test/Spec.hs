@@ -1,4 +1,4 @@
-module Main where
+module Main(main) where
 
 import Test.Hspec
 import Interpreter (evalExpr)
@@ -81,8 +81,3 @@ main = hspec $ do
         --     eval_expr "(+ 1)" `shouldThrow` anyException  -- 缺少参数
         --     eval_expr "(1 2 3)" `shouldThrow` anyException  -- 无效的表达式
         --     eval_expr "(+ 1 two)" `shouldThrow` anyException  -- 非数字参数
-
--- 辅助函数：检查是否是 Left 值
-isLeft :: Either a b -> Bool
-isLeft (Left _) = True
-isLeft _ = False

@@ -13,7 +13,14 @@ import Control.Monad.Except
 import Control.Monad.State
 
 newtype Env = Env (Map String SExp) deriving Show
-newtype IError = IError String deriving Show
+data IError = EvalError String 
+    | CondError String
+    | ApplyError String
+    | PrimitiveError String
+    | ToIntError String
+    | ToBoolError String
+    | UnknownOperatorError String
+    deriving Show
 newtype Intrp a = Intrp { intrp :: ExceptT IError (State Env) a }
     deriving (Functor, Applicative, Monad, MonadError IError, MonadState Env)
 
@@ -31,12 +38,12 @@ eval ( Node (x:xs) ) = do
         Op o -> do
             args <- listOfValues xs
             apply o args
-        _ -> error "invalid expression"
-eval _ = error "invalid expression"
+        _ -> throwError $ EvalError "invalid expression"
+eval _ = throwError $ EvalError "invalid expression"
 
 
 evalCond :: [SExp] -> Intrp Atom
-evalCond [] = error "no true clause in cond"
+evalCond [] = throwError $ CondError "no true or else clause" 
 evalCond (x:xs)= case x of
     Node [Leaf (Op "else"),y] -> eval y
     Node [c,y] -> do
@@ -44,7 +51,7 @@ evalCond (x:xs)= case x of
         if toBool cond
             then eval y
             else evalCond xs
-    _ -> error "invalid cond clause"
+    _ -> throwError $ CondError "invalid clause"
 
 apply :: String -> [Atom] -> Intrp Atom
 apply o args = return $ primitiveProcedure o args
