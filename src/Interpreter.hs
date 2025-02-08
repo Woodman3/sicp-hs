@@ -2,20 +2,20 @@ module Interpreter(evalExpr) where
 
 import Token(sExp,SExp) 
 import Parser(parse,ParseError(..))
-import Eval
+import Eval(eval,Env(..),IError(..),Intrp(..))
 
-import Data.Map
-import Control.Monad
-import Control.Monad.Except
-import Control.Monad.State
-import Control.Applicative
+import Data.Map(empty)
+import Control.Monad.Except(ExceptT,runExceptT)
+import Control.Monad.State(State,runState)
 
-newtype Env = Env (Map String SExp) deriving Show
-newtype IError = IError String deriving Show
+runIntrp :: Intrp a -> Either IError a
+runIntrp i =case (runState . runExceptT . intrp) i (Env empty) of
+    (Left e,_) -> Left e
+    (Right a,_) -> Right a
 
-newtype Intrp a = Intrp { run :: ExceptT IError (State (SExp,Env)) a }
-
-evalExpr :: String -> Either [ ParseError Char ] String 
+evalExpr :: String -> Either String String
 evalExpr s = case parse sExp s 0 of
-    Left err -> Left err
-    Right (ast,_,_) -> Right $ show $ eval ast 
+    Left p -> Left $ show p
+    Right (x,_,_) -> case runIntrp (eval x)  of
+        Left (IError e) -> Left e
+        Right a -> Right $ show a

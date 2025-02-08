@@ -1,37 +1,56 @@
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Eval(
-    eval
+    eval,
+    Env(..),
+    IError(..),
+    Intrp(..)
 )where
-
 import Token
 
-newtype Env = State [(String,Atom)] deriving Show
+import Data.Map(Map)
+import Control.Monad
+import Control.Monad.Except
+import Control.Monad.State
 
-eval :: SExp -> Atom
-eval ( Leaf a ) = a
-eval ( Node (x:xs) ) = case eval x of
-    Op "if" -> if toBool $ eval $ head xs
-        then eval $ xs !! 1
-        else eval $ xs !! 2
-    Op "cond" -> evalCond xs
-    Op o ->  apply o (listOfValues xs)
-    _ -> error "invalid expression"
+newtype Env = Env (Map String SExp) deriving Show
+newtype IError = IError String deriving Show
+newtype Intrp a = Intrp { intrp :: ExceptT IError (State Env) a }
+    deriving (Functor, Applicative, Monad, MonadError IError, MonadState Env)
+
+eval :: SExp -> Intrp Atom
+eval ( Leaf a ) = return a
+eval ( Node (x:xs) ) = do
+    x <- eval x
+    case x of
+        Op "if" -> do
+            cond <- eval $ head xs
+            if toBool cond
+                then eval $ xs !! 1
+                else eval $ xs !! 2
+        Op "cond" -> evalCond xs
+        Op o -> do
+            args <- listOfValues xs
+            apply o args
+        _ -> error "invalid expression"
 eval _ = error "invalid expression"
 
 
-evalCond :: [SExp] -> Atom
+evalCond :: [SExp] -> Intrp Atom
 evalCond [] = error "no true clause in cond"
 evalCond (x:xs)= case x of
     Node [Leaf (Op "else"),y] -> eval y
-    Node [c,y] -> if toBool $ eval c
-        then eval y
-        else evalCond xs
+    Node [c,y] -> do
+        cond <- eval c
+        if toBool cond
+            then eval y
+            else evalCond xs
     _ -> error "invalid cond clause"
 
-apply :: String -> [Atom] -> Atom
-apply = primitiveProcedure
+apply :: String -> [Atom] -> Intrp Atom
+apply o args = return $ primitiveProcedure o args
 
-listOfValues :: [SExp] -> [Atom]
-listOfValues = map eval
+listOfValues :: [SExp] -> Intrp [Atom]
+listOfValues = mapM eval
 
 primitiveProcedure :: String -> [Atom] -> Atom
 primitiveProcedure "+" args = Int $ foldr (+) 0 $ map (toInt) args -- (+) return just 0 in lisp

@@ -17,4 +17,4 @@ main = do
             print "ast"
             print ast
             print "eval"
-            print $ eval ast
+            -- print $ eval ast
