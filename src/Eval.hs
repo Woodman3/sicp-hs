@@ -6,13 +6,13 @@ module Eval(
     IError(..),
     Intrp(..)
 )where
-import Token
+import Token(Atom(..), SExp(..))
 
-import Data.Map(Map)
-import Control.Monad.Except
-import Control.Monad.State
+import qualified Data.Map as Map
+import Control.Monad.Except(ExceptT, MonadError, throwError)
+import Control.Monad.State(State, MonadState, get, modify)
 
-newtype Env = Env (Map String SExp) deriving Show
+newtype Env = Env (Map.Map String SExp) deriving Show
 data IError = EvalError String 
     | CondError String
     | ApplyError String
@@ -25,17 +25,37 @@ newtype Intrp a = Intrp { intrp :: ExceptT IError (State Env) a }
     deriving (Functor, Applicative, Monad, MonadError IError, MonadState Env)
 
 eval :: SExp -> Intrp Atom
+eval ( Leaf (Var v)) = lookUpVar v >>= eval
 eval ( Leaf a ) = return a
 eval ( Node (x:xs) ) =eval x >>= \case
     Op "if" -> evalIf xs
     Op "cond" -> evalCond xs
     Op "begin" -> last <$> mapM eval xs
+    Op "define" -> case xs of
+        [Leaf (Var v),e] -> do
+            ev <- eval e
+            modify $ \(Env m) -> Env $ Map.insert v (Leaf ev) m
+            return ev --todo: return void
+        _ -> throwError $ EvalError "invalid define expression"
+    Op "set1" -> case xs of
+        [Leaf (Var v),e] -> do
+            ev <- eval e
+            _ <- lookUpVar v
+            modify $ \(Env m) -> Env $ Map.insert v (Leaf ev) m
+            return ev --todo: return void
+        _ -> throwError $ EvalError "invalid set1 expression"
     Op o -> do
         args <- listOfValues xs
         apply o args
     _ -> throwError $ EvalError "invalid expression"
 eval _ = throwError $ EvalError "invalid expression"
 
+lookUpVar :: String -> Intrp SExp
+lookUpVar v = do
+    Env env <- get
+    case Map.lookup v env of
+        Just x -> return x
+        Nothing -> throwError $ EvalError "variable not found"
 
 evalCond :: [SExp] -> Intrp Atom
 evalCond [] = throwError $ CondError "no true or else clause" 

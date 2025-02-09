@@ -81,6 +81,16 @@ main = hspec $ do
             evalExpr "(begin 1 2 3)" `shouldBe` Right "Int 3"
             evalExpr "(begin (+ 1 2) (- 5 2) (* 2 4))" `shouldBe` Right "Int 8"
             evalExpr "(begin (begin 1 2) 3)" `shouldBe` Right "Int 3"
+        
+        it "handles define expressions" $ do
+            evalExpr "(define x 10) x" `shouldBe` Right "Int 10"
+            evalExpr "(define x 10) (define y 20) (+ x y)" `shouldBe` Right "Int 30"
+            evalExpr "(define x 10) (define y 20) (define z (+ x y)) z" `shouldBe` Right "Int 30"
+        
+        it "handles set1 expressions" $ do
+            evalExpr "(define x 10) (set1 x 20) x" `shouldBe` Right "Int 20"
+            evalExpr "(define x 10) (define y 20) (set1 x (+ x y)) x" `shouldBe` Right "Int 30"
+            evalExpr "(define x 10) (define y 20) (set1 x (+ x y)) (set1 y 30) (+ x y)" `shouldBe` Right "Int 60"
 
         -- it "handles invalid expressions" $ do
         --     eval_expr "(+ 1)" `shouldThrow` anyException  -- 缺少参数

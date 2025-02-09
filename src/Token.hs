@@ -17,13 +17,17 @@ data Atom = Int Int
 data SExp = Node [SExp] | Leaf Atom deriving (Show,Eq)
 
 atom :: Parser Atom
-atom = foldr1 ( <|>) [
-    Int <$> int,
-    Bool <$> bool,
-    String <$> expString,
-    expOp,
-    expVar
-    ]
+atom = do
+    spaces
+    a <- foldr1 ( <|>) [
+        Int <$> int,
+        Bool <$> bool,
+        String <$> expString,
+        expOp,
+        expVar
+        ]
+    spaces
+    return a
 
 
 bool :: Parser Bool
@@ -37,9 +41,11 @@ expString = char '"' *> many (satisfy (/= '"')) <* char '"'
 
 node :: Parser SExp
 node = do
+    spaces
     _ <- char '('
-    exps <- many (spaces *> sExp <* spaces)
+    exps <- many sExp 
     _ <- char ')'
+    spaces
     return $ Node exps
 
 sExp :: Parser SExp
@@ -50,7 +56,7 @@ expOp = Op <$> matchString ["+", "-", "*", "/",
     "<=",">=","<",">","=","and","or","not",
     "if","cond","else",
     "begin",
-    "define"]
+    "define","set1"]
 
 expVar :: Parser Atom
 expVar = Var <$> some (satisfy isAlpha)
