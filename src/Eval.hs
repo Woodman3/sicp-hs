@@ -40,6 +40,11 @@ eval ( Node (x:xs) ) =eval x >>= \case
             ev <- eval e
             insertVar v ev
             return ev --todo: return void
+        [Node ( fn:args ),body] -> do
+            vars <- mapM extractVar args
+            fn_name <- extractVar fn
+            insertVar fn_name $ Lambda vars body
+            return $ Op fn_name --todo: return void
         _ -> throwError $ EvalError "invalid define expression"
     Op "set1" -> case xs of
         [Leaf (Var v),e] -> do
@@ -50,13 +55,18 @@ eval ( Node (x:xs) ) =eval x >>= \case
         _ -> throwError $ EvalError "invalid set1 expression"
     Op "lambda" -> case xs of
         [Node args,e] -> do
-            vars <- mapM (\case {Leaf (Var v) -> return v;  _ -> throwError $ EvalError "invalid lambda expression"}) args
+            vars <- mapM extractVar args
             return $ Lambda vars e
         _ -> throwError $ EvalError "invalid lambda expression"
     Op o -> do
         args <- listOfValues xs
         apply (Op o) args
     _ -> throwError $ EvalError "invalid expression"
+    where
+        extractVar :: SExp -> Intrp String
+        extractVar (Leaf (Var v)) = return v
+        extractVar _ = throwError $ EvalError "invalid lambda expression"
+
 eval _ = throwError $ EvalError "invalid expression"
 
 lookUpVar :: String -> Intrp Atom 

@@ -96,6 +96,16 @@ main = hspec $ do
             evalExpr "((lambda (x) x) 10)" `shouldBe` Right "Int 10"
             evalExpr "((lambda (x y) (+ x y)) 10 20)" `shouldBe` Right "Int 30"
             evalExpr "((lambda (x y) (+ x y)) 10 (+ 10 20))" `shouldBe` Right "Int 40"
+        
+        it "handles define lambda expressions" $ do
+            evalExpr "(define add (lambda (x y) (+ x y))) (add 10 20)" `shouldBe` Right "Int 30"
+            evalExpr "(define add (lambda (x y) (+ x y))) (define x 10) (define y 20) (add x y)" `shouldBe` Right "Int 30"
+            evalExpr "(define add (lambda (x y) (+ x y))) (define x 10) (define y 20) (define z (add x y)) z" `shouldBe` Right "Int 30"
+        
+        it "handles define function expressions" $ do
+            evalExpr "(define (add x y) (+ x y)) (add 10 20)" `shouldBe` Right "Int 30"
+            evalExpr "(define (add x y) (+ x y)) (define x 10) (define y 20) (add x y)" `shouldBe` Right "Int 30"
+            evalExpr "(define (add x y) (+ x y)) (define x 10) (define y 20) (define z (add x y)) z" `shouldBe` Right "Int 30"
 
 
         -- it "handles invalid expressions" $ do
