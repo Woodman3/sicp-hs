@@ -4,13 +4,12 @@ import Token(sExp)
 import Parser(parse)
 import Eval(eval,Env(..),IError(..),Intrp(..))
 
-import Data.Map(empty)
 import Control.Monad.Except(runExceptT)
 import Control.Monad.State(runState)
 import Control.Applicative(some)
 
 runIntrp :: Intrp a -> Either IError a
-runIntrp i =case (runState . runExceptT . intrp) i (Env empty) of
+runIntrp i =case (runState . runExceptT . intrp) i (Env []) of
     (Left e,_) -> Left e
     (Right a,_) -> Right a
 

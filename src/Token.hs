@@ -12,6 +12,7 @@ data Atom = Int Int
     | Bool Bool 
     | String String
     | Op String
+    | Lambda [String] SExp
     | Var String deriving (Show,Eq)
 
 data SExp = Node [SExp] | Leaf Atom deriving (Show,Eq)
@@ -24,6 +25,7 @@ atom = do
         Bool <$> bool,
         String <$> expString,
         expOp,
+        -- expLambda,
         expVar
         ]
     spaces
@@ -56,7 +58,20 @@ expOp = Op <$> matchString ["+", "-", "*", "/",
     "<=",">=","<",">","=","and","or","not",
     "if","cond","else",
     "begin",
-    "define","set1"]
+    "define","set1",
+    "lambda"]
+
+-- expLambda :: Parser Atom
+-- expLambda = do
+--     _ <- string "lambda"
+--     spaces
+--     _ <- char '('
+--     vars <- some (spaces *> expVar <* spaces)
+--     let vars' = [v | Var v <- vars]
+--     _ <- char ')'
+--     spaces
+--     e <- sExp
+--     return $ Lambda vars' e
 
 expVar :: Parser Atom
 expVar = Var <$> some (satisfy isAlpha)
